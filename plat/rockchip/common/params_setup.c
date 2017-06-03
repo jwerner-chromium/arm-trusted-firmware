@@ -18,7 +18,7 @@
 
 static struct gpio_info param_reset;
 static struct gpio_info param_poweroff;
-static struct bl31_apio_param param_apio;
+static struct apio_info param_apio;
 static struct gpio_info *rst_gpio;
 static struct gpio_info *poweroff_gpio;
 static struct gpio_info suspend_gpio[10];
@@ -47,48 +47,43 @@ struct apio_info *plat_get_rockchip_suspend_apio(void)
 	return suspend_apio;
 }
 
-void params_early_setup(void *plat_param_from_bl2)
-{
-	struct bl31_plat_param *bl2_param;
+static int rockchip_bl31_plat_param_handler(struct bl31_plat_param *param) {
+	struct bl31_apio_param *apio_param;
 	struct bl31_gpio_param *gpio_param;
 
-	/* keep plat parameters for later processing if need */
-	bl2_param = (struct bl31_plat_param *)plat_param_from_bl2;
-	while (bl2_param) {
-		switch (bl2_param->type) {
-		case PARAM_RESET:
-			gpio_param = (struct bl31_gpio_param *)bl2_param;
-			memcpy(&param_reset, &gpio_param->gpio,
-			       sizeof(struct gpio_info));
-			rst_gpio = &param_reset;
-			break;
-		case PARAM_POWEROFF:
-			gpio_param = (struct bl31_gpio_param *)bl2_param;
-			memcpy(&param_poweroff, &gpio_param->gpio,
-				sizeof(struct gpio_info));
-			poweroff_gpio = &param_poweroff;
-			break;
-		case PARAM_SUSPEND_GPIO:
-			if (suspend_gpio_cnt >= ARRAY_SIZE(suspend_gpio)) {
-				ERROR("exceed support suspend gpio number\n");
-				break;
-			}
-			gpio_param = (struct bl31_gpio_param *)bl2_param;
-			memcpy(&suspend_gpio[suspend_gpio_cnt],
-			       &gpio_param->gpio,
-			       sizeof(struct gpio_info));
-			suspend_gpio_cnt++;
-			break;
-		case PARAM_SUSPEND_APIO:
-			memcpy(&param_apio, bl2_param,
-			       sizeof(struct bl31_apio_param));
-			suspend_apio = &param_apio.apio;
-			break;
-		default:
-			ERROR("not expected type found %ld\n",
-			      bl2_param->type);
-			break;
+	switch (param->tag) {
+	case PARAM_RESET:
+		gpio_param = (struct bl31_gpio_param *)param;
+		memcpy(&param_reset, &gpio_param->gpio, sizeof(param_reset));
+		rst_gpio = &param_reset;
+		return 1;
+	case PARAM_POWEROFF:
+		gpio_param = (struct bl31_gpio_param *)param;
+		memcpy(&param_poweroff, &gpio_param->gpio,
+		       sizeof(param_poweroff));
+		poweroff_gpio = &param_poweroff;
+		return 1;
+	case PARAM_SUSPEND_GPIO:
+		if (suspend_gpio_cnt >= ARRAY_SIZE(suspend_gpio)) {
+			ERROR("Supported suspend gpio number exceeded\n");
+			return -1;
 		}
-		bl2_param = bl2_param->next;
+		gpio_param = (struct bl31_gpio_param *)param;
+		memcpy(&suspend_gpio[suspend_gpio_cnt], &gpio_param->gpio,
+		       sizeof(suspend_gpio[0]));
+		suspend_gpio_cnt++;
+		return 1;
+	case PARAM_SUSPEND_APIO:
+		apio_param = (struct bl31_apio_param *)param;
+		memcpy(&param_apio, &apio_param->apio, sizeof(param_apio));
+		suspend_apio = &param_apio;
+		return 1;
 	}
+
+	return 0;
+}
+
+void params_early_setup(void *from_bl2)
+{
+	bl31_plat_params_setup(from_bl2, rockchip_bl31_plat_param_handler);
 }
