@@ -12,6 +12,7 @@ BL31_SOURCES		+=	bl31/bl31_main.c				\
 				bl31/aarch64/runtime_exceptions.S		\
 				bl31/aarch64/crash_reporting.S			\
 				bl31/bl31_context_mgmt.c			\
+				bl31/plat_params.c				\
 				common/runtime_svc.c				\
 				plat/common/aarch64/platform_mp_stack.S		\
 				services/std_svc/std_svc_setup.c		\
