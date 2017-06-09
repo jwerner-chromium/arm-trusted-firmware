@@ -256,7 +256,17 @@ include lib/stack_protector/stack_protector.mk
 # makefile may use all previous definitions in this file)
 ################################################################################
 
+# Exclude coreboot support by default, override by command line or plat file
+COREBOOT := 0
+
 include ${PLAT_MAKEFILE_FULL}
+
+ifeq (${COREBOOT},1)
+ifneq (${ARCH},aarch64)
+	$(error "Error: coreboot only supports Trusted Firmware on AArch64.")
+endif
+include lib/coreboot/coreboot.mk
+endif
 
 # Platform compatibility is not supported in AArch32
 ifneq (${ARCH},aarch32)
@@ -428,6 +438,7 @@ endif
 ################################################################################
 
 $(eval $(call assert_boolean,COLD_BOOT_SINGLE_CPU))
+$(eval $(call assert_boolean,COREBOOT))
 $(eval $(call assert_boolean,CREATE_KEYS))
 $(eval $(call assert_boolean,CTX_INCLUDE_AARCH32_REGS))
 $(eval $(call assert_boolean,CTX_INCLUDE_FPREGS))
@@ -469,6 +480,7 @@ $(eval $(call add_define,ARM_ARCH_MAJOR))
 $(eval $(call add_define,ARM_ARCH_MINOR))
 $(eval $(call add_define,ARM_GIC_ARCH))
 $(eval $(call add_define,COLD_BOOT_SINGLE_CPU))
+$(eval $(call add_define,COREBOOT))
 $(eval $(call add_define,CTX_INCLUDE_AARCH32_REGS))
 $(eval $(call add_define,CTX_INCLUDE_FPREGS))
 $(eval $(call add_define,ENABLE_ASSERTIONS))
