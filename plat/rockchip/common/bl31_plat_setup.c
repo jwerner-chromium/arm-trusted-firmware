@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <bl_common.h>
 #include <console.h>
+#include <coreboot/coreboot_table.h>
 #include <debug.h>
 #include <generic_delay_timer.h>
 #include <mmio.h>
@@ -69,8 +70,13 @@ void params_early_setup(void *plat_param_from_bl2)
 void bl31_early_platform_setup(bl31_params_t *from_bl2,
 			       void *plat_params_from_bl2)
 {
-	console_init(PLAT_RK_UART_BASE, PLAT_RK_UART_CLOCK,
-		     PLAT_RK_UART_BAUDRATE);
+	if (!COREBOOT)
+		console_init(PLAT_RK_UART_BASE, PLAT_RK_UART_CLOCK,
+			     PLAT_RK_UART_BAUDRATE);
+
+	params_early_setup(plat_params_from_bl2);
+	if (COREBOOT)
+		coreboot_console_init();
 
 	VERBOSE("bl31_setup\n");
 
@@ -82,9 +88,6 @@ void bl31_early_platform_setup(bl31_params_t *from_bl2,
 
 	bl32_ep_info = *from_bl2->bl32_ep_info;
 	bl33_ep_info = *from_bl2->bl33_ep_info;
-
-	/* there may have some board sepcific message need to initialize */
-	params_early_setup(plat_params_from_bl2);
 }
 
 /*******************************************************************************
