@@ -95,10 +95,15 @@ endfunc console_getc
 	 * data that hasn't been output. It returns 0
 	 * upon successful completion, otherwise it
 	 * returns -1.
-	 * Clobber list : x0, x1
+	 * Clobber list : x0, x1, x2, x3, x4
 	 * ---------------------------------------------
 	 */
 func console_flush
+#if COREBOOT
+	mov	x4, x30
+	bl	coreboot_cbmc_flush
+	mov	x30, x4
+#endif
 	adrp	x1, console_base
 	ldr	x0, [x1, :lo12:console_base]
 	b	console_core_flush

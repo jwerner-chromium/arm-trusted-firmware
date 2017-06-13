@@ -5,6 +5,7 @@
  */
 
 #include <console.h>
+#include <coreboot/cbmem_console.h>
 #include <coreboot/coreboot_table.h>
 #include <debug.h>
 #include <mmio.h>
@@ -27,6 +28,7 @@ struct cb_header {
 
 enum cb_tag {
 	CB_TAG_SERIAL = 0xf,
+	CB_TAG_CBMEM_CONSOLE = 0x17,
 };
 
 struct cb_serial {
@@ -44,6 +46,7 @@ struct cb_entry {
 	uint32_t size;
 	union {
 		struct cb_serial serial;
+		uint64_t uint64;
 	};
 };
 
@@ -61,6 +64,10 @@ static uint32_t read_le32(uint32_t *p)
 	       mmio_read_8(addr + 1) << 8	|
 	       mmio_read_8(addr + 2) << 16	|
 	       mmio_read_8(addr + 3) << 24;
+}
+static uint64_t read_le64(uint64_t *p)
+{
+	return read_le32((void *)p) | (uint64_t)read_le32((void *)p + 4) << 32;
 }
 
 void coreboot_table_setup(struct bl31_plat_param *param)
@@ -88,6 +95,9 @@ void coreboot_table_setup(struct bl31_plat_param *param)
 		switch (read_le32(&entry->tag)) {
 		case CB_TAG_SERIAL:
 			memcpy(&serial, &entry->serial, sizeof(serial));
+			break;
+		case CB_TAG_CBMEM_CONSOLE:
+			coreboot_cbmc_init(read_le64(&entry->uint64));
 			break;
 		default:
 			/* There are many tags TF doesn't need to care about. */

@@ -5,4 +5,6 @@
 #
 
 BL31_SOURCES	+=	$(addprefix lib/coreboot/,	\
+			${ARCH}/cbmem_console_asm.S	\
+			cbmem_console.c			\
 			coreboot_table.c)
