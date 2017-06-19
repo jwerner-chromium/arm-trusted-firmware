@@ -2267,7 +2267,7 @@ register x0.
 
 This API is used by the crash reporting mechanism to force write of all buffered
 data on the designated crash console. It should only use general purpose
-registers x0 and x1 to do its work. The return value is 0 on successful
+registers x0, x1, x2 and x3 to do its work. The return value is 0 on successful
 completion; otherwise the return value is -1.
 
 

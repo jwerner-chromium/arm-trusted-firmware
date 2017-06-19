@@ -5,6 +5,7 @@
  */
 #include <arch.h>
 #include <asm_macros.S>
+#include <debug_macros.S>
 #include <context.h>
 #include <cpu_data.h>
 #include <plat_macros.S>
@@ -60,8 +61,11 @@ intr_excpt_msg:
 	 * Helper function to print newline to console.
 	 */
 func print_newline
+	mov	x3, x30
 	mov	x0, '\n'
-	b	plat_crash_console_putc
+	crash_console_putc
+	mov	x30, x3
+	ret
 endfunc print_newline
 
 	/*

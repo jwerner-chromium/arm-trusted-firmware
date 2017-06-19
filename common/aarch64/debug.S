@@ -6,6 +6,7 @@
 
 #include <arch.h>
 #include <asm_macros.S>
+#include <debug_macros.S>
 
 	.globl	asm_print_str
 	.globl	asm_print_hex
@@ -38,7 +39,7 @@ dec_print_loop:
 	udiv	x0, x4, x5		/* Get the quotient */
 	msub	x4, x0, x5, x4		/* Find the remainder */
 	add	x0, x0, #ASCII_OFFSET_NUM		/* Convert to ascii */
-	bl	plat_crash_console_putc
+	crash_console_putc
 	udiv	x5, x5, x6		/* Reduce divisor */
 	cbnz	x5, dec_print_loop
 	.endm
@@ -77,7 +78,7 @@ func asm_assert
 	b.ne	_assert_loop
 	mov	x4, x6
 	asm_print_line_dec
-	bl	plat_crash_console_flush
+	crash_console_flush
 _assert_loop:
 #endif /* LOG_LEVEL >= LOG_LEVEL_INFO */
 	no_ret	plat_panic_handler
@@ -94,7 +95,7 @@ func asm_print_str
 1:
 	ldrb	w0, [x4], #0x1
 	cbz	x0, 2f
-	bl	plat_crash_console_putc
+	crash_console_putc
 	b	1b
 2:
 	ret	x3
@@ -120,7 +121,7 @@ func asm_print_hex
 	add	x0, x0, #0x27
 2:
 	add	x0, x0, #ASCII_OFFSET_NUM
-	bl	plat_crash_console_putc
+	crash_console_putc
 	cbnz	x5, 1b
 	ret	x3
 endfunc asm_print_hex
@@ -170,7 +171,7 @@ el3_panic:
 	sub	x4, x4, #4
 	bl	asm_print_hex
 
-	bl	plat_crash_console_flush
+	crash_console_flush
 
 _panic_handler:
 	/* Pass to plat_panic_handler the address from where el3_panic was
